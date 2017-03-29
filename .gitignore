@@ -1,0 +1,15 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+.idea/
+pvenv/
+siren_parser/scrapy.cfg
+siren_parser/siren_parser/__init__.py
+siren_parser/siren_parser/settings.py
+siren_parser/siren_parser/spiders/__init__.py
+siren_parser/siren_parser/spiders/test.py
+siren_parser/siren_parser/spiders/__pycache__
+siren_parser/__pycache__/__init__.cpython-34.pyc
+siren_parser/__pycache__/items.cpython-34.pyc
+siren_parser/__pycache__/models.cpython-34.pyc
+siren_parser/__pycache__/pipelines.cpython-34.pyc
+siren_parser/__pycache__/settings.cpython-34.pyc
