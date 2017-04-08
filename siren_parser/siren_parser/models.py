@@ -34,6 +34,7 @@ class Video(Base):
     season = Column('season', Integer, nullable=True)
     last_episode = Column('last_episode', String, nullable=True)
     label = Column('label', String, nullable=True)
+    website = relationship("Website", cascade="save-update")
 
 
 class Website(Base):
@@ -49,6 +50,27 @@ class Website(Base):
     video_id = Column('video_id', Integer, ForeignKey('video.id'), nullable=False)
     video = relationship("Video", primaryjoin='Website.video_id==Video.id', uselist=True,
                            backref="video")
+
+
+class User(Base):
+
+    __tablename__ = 'user'
+
+    id = Column('id', Integer, primary_key=True)
+    username = Column('username', String)
+    last_login = Column('last_login', String, nullable=True)
+    login = Column('login', String)
+    mail_address = Column('mail_address', String)
+    password = Column('password', String)
+
+
+class UserSubscription(Base):
+
+    __tablename__ = 'user_subscription'
+
+    id = Column('id', Integer, primary_key=True)
+    video_id = Column('video_id', Integer, ForeignKey('video.id'), nullable=False)
+    user_id = Column('user_id', Integer, ForeignKey('user.id'), nullable=False)
 
 
 def create_tables(engine):

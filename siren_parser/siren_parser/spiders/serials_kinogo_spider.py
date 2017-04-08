@@ -16,11 +16,13 @@ class SerialsKinogoSpider(CrawlSpider):
     name = "serials_kinogo"
     start_urls = settings.START_URLS
     allowed_domains = settings.ALLOWED_DOMAINS
-    rules = (Rule(LxmlLinkExtractor(allow='/zarubezhnye_serialy/')),
-             Rule(LxmlLinkExtractor(allow='/russkye_serialy/')),
-             Rule(LxmlLinkExtractor(allow='/turezkie_serialy/')),
-             Rule(LxmlLinkExtractor(allow='-sezon.html'), callback='parse_item', follow=True))
+    rules = (
 
+             Rule(LxmlLinkExtractor(allow='_serialy/'), follow=True),
+             Rule(LxmlLinkExtractor(allow='-sezon.html'), callback='parse_item', follow=True))
+    # Rule(LxmlLinkExtractor(allow='/zarubezhnye_serialy/')),
+    # Rule(LxmlLinkExtractor(allow='/russkye_serialy/')),
+    # Rule(LxmlLinkExtractor(allow='/turezkie_serialy/')),
     def parse_item(self, response):
 
         sel = scrapy.Selector(response)
