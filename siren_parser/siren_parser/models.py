@@ -25,8 +25,8 @@ class Video(Base):
     name = Column('name', String)
     year_of_issue = Column('year_of_issue', String, nullable=True)
     country = Column('country', String)
-    genre = Column('genre', String)
-    duration = Column('duration', Integer)
+    genre = Column('genre', String, nullable=True)
+    duration = Column('duration', Integer, nullable=True)
     premiere = Column('premiere', String, nullable=True)
     description = Column('description', String, nullable=True)
     photo = Column('photo', String)
@@ -42,9 +42,9 @@ class Website(Base):
     __tablename__ = 'website'
 
     id = Column('id', Integer, primary_key=True)
-    title = Column('title', String, default='kinogo.club')
-    quality = Column('quality', String)
-    translation = Column('translation', String)
+    title = Column('title', String, default='kinoprofi.org')
+    quality = Column('quality', String, nullable=True)
+    translation = Column('translation', String, nullable=True)
     update_date = Column('update_date', String)
     link_to_watch_online = Column('link_to_watch_online', String, nullable=True)
     video_id = Column('video_id', Integer, ForeignKey('video.id'), nullable=False)

@@ -1,7 +1,5 @@
 from sqlalchemy.orm import sessionmaker
 
-from sqlalchemy.sql import select
-
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -73,14 +71,54 @@ class SerialsPipeline(object):
                     session.commit()
                     mails = session.query(User.mail_address).join(UserSubscription,
                                                                   User.id == UserSubscription.user_id). \
-                        filter(UserSubscription.video_id == 578).all()
-                    for mail in mails:
-                        send_email("Siren: вышла новая серия",
-                                   "Вышла новая серия {}  на сайте {}. "
-                                   "Ссылка для просмотра онлайн {}".format(video_db.name,
-                                                                           website_db.title,
-                                                                           website_db.link_to_watch_online),
-                                   mail)
+                        filter(UserSubscription.video_id == video_db.id).all()
+                    if mails:
+                        for mail in mails:
+                            send_email("Siren: вышла новая серия",
+                                       "Вышла новая серия {}  на сайте {}. "
+                                       "Ссылка для просмотра онлайн {}".format(video_db.name,
+                                                                               website_db.title,
+                                                                               website_db.link_to_watch_online),
+                                       mail)
+
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+        return item
+
+
+class PKSerialsPipeline(object):
+
+    def __init__(self):
+
+        engine = db_connect()
+        create_tables(engine)
+        self.Session = sessionmaker(bind=engine)
+
+    def process_item(self, item, spider):
+
+        session = self.Session()
+
+        video = Video(name=item['name'], year_of_issue=item['year_of_issue'],
+                      country=item['country'], genre=item['genre'],
+
+                      description=item['description'], photo=item['photo'],
+                      type=item['type'], season=item['season'],
+                      last_episode=item['last_episode'])
+
+        website = Website(
+                          update_date=item['update_date'],
+                          link_to_watch_online=item['link_to_watch_online'])
+
+        try:
+                session.add(video)
+                session.commit()
+                website.video_id = video.id
+                session.add(website)
+                session.commit()
 
         except:
             session.rollback()
