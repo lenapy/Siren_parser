@@ -4,6 +4,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import pickle
+
 from siren_parser.models import Video, Website, db_connect, create_tables, User, UserSubscription
 from siren_parser import settings
 
@@ -22,6 +24,28 @@ def send_email(subject, body, mail_address):
     s.login(settings.MAIL, settings.PASS)
     s.send_message(msg)
     s.quit()
+
+
+def read_data_file():
+    try:
+        with open(settings.DATA_FILE, 'rb') as f:
+            return pickle.load(f)
+    except IOError:
+        return []
+
+
+def save_data_file(sended):
+    with open(settings.DATA_FILE, 'wb') as f:
+        pickle.dump(sended, f)
+
+
+def prepare_name_for_search(name):
+    clean_name = name.rpartition(' (')
+    second_clean_name = (clean_name[0].partition(' '))
+    if second_clean_name[2]:
+        return second_clean_name[2]
+    else:
+        return second_clean_name[0]
 
 
 class SerialsPipeline(object):
@@ -66,20 +90,35 @@ class SerialsPipeline(object):
                 if video_db.last_episode != video.last_episode:
                     video_db.last_episode = video.last_episode
                     session.commit()
+
                     website_db = session.query(Website).filter_by(video_id=video_db.id).first()
                     website_db.update_date = website.update_date
                     session.commit()
-                    mails = session.query(User.mail_address).join(UserSubscription,
-                                                                  User.id == UserSubscription.user_id). \
-                        filter(UserSubscription.video_id == video_db.id).all()
-                    if mails:
-                        for mail in mails:
-                            send_email("Siren: вышла новая серия",
-                                       "Вышла новая серия {}  на сайте {}. "
-                                       "Ссылка для просмотра онлайн {}".format(video_db.name,
-                                                                               website_db.title,
-                                                                               website_db.link_to_watch_online),
-                                       mail)
+
+                    video_clean_name = prepare_name_for_search(video.name)
+                    search_name = '%' + video_clean_name + '%'
+                    user_subs = session.query(Video.name, Video.season,
+                                              Video.last_episode, User.mail_address).\
+                        join(UserSubscription, Video.id == UserSubscription.video_id).\
+                        join(User, UserSubscription.user_id == User.id).\
+                        filter(Video.name.like(search_name),
+                               Video.season == video.season).all()
+                    if user_subs:
+                        sended = read_data_file()
+                        for tv_show_data in user_subs:
+                            data_to_save = (video_clean_name, tv_show_data[1],
+                                            tv_show_data[2], tv_show_data[3])
+                            if data_to_save in sended:
+                                continue
+                            else:
+                                send_email("Siren: вышла новая серия",
+                                           "Вышла новая серия {}  на сайте {}. "
+                                           "Ссылка для просмотра онлайн {}".format(video_db.name,
+                                                                                   website_db.title,
+                                                                                   website_db.link_to_watch_online),
+                                           data_to_save[3])
+                                sended.append(data_to_save)
+                                save_data_file(sended)
 
         except:
             session.rollback()
